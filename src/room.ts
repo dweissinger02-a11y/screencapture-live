@@ -194,7 +194,9 @@ export class LiveStreamRoom extends DurableObject<Env> {
       if (oldPublisher) await this.closePublisher(realtime, oldPublisher);
 
       return success({ sessionDescription: response.sessionDescription });
-    } catch {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('[WFR LIVE] Publisher negotiation failed:', errorMessage);
       if (oldPublisher) {
         await Promise.allSettled(retargetedViewers.map((viewer) => this.retargetViewer(
           realtime,
@@ -214,7 +216,7 @@ export class LiveStreamRoom extends DurableObject<Env> {
           Date.now(),
         );
       }
-      return failure(502, 'Media service could not publish the stream');
+      return failure(502, `Media service could not publish the stream: ${errorMessage}`);
     }
   }
 
